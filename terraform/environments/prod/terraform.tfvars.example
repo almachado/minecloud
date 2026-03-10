@@ -1,0 +1,4 @@
+aws_region   = "us-east-1"
+project_name = "minecloud"
+environment  = "prod"
+allowed_ip   = "0.0.0.0/32" # Replace with your actual IP
