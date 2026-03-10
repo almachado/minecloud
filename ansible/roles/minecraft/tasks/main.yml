@@ -1,0 +1,87 @@
+- name: Update and upgrade system packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+  become: true
+
+- name: Install Java 21
+  ansible.builtin.apt:
+    name: openjdk-21-jre-headless
+    state: present
+  become: true
+
+- name: Create minecraft group
+  ansible.builtin.group:
+    name: "{{ minecraft_group }}"
+    system: true
+  become: true
+
+- name: Create minecraft user
+  ansible.builtin.user:
+    name: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    system: true
+    home: "{{ minecraft_dir }}"
+    shell: /bin/bash
+    create_home: true
+  become: true
+
+- name: Create filesystem on data volume
+  community.general.filesystem:
+    fstype: ext4
+    dev: "{{ minecraft_data_device }}"
+  become: true
+
+- name: Mount data volume
+  ansible.builtin.mount:
+    path: "{{ minecraft_server_dir }}"
+    src: "{{ minecraft_data_device }}"
+    fstype: ext4
+    opts: defaults,nofail
+    state: mounted
+  become: true
+
+- name: Set ownership of server directory
+  ansible.builtin.file:
+    path: "{{ minecraft_server_dir }}"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: "0755"
+    recurse: true
+  become: true
+
+- name: Download Minecraft server jar
+  ansible.builtin.get_url:
+    url: "{{ minecraft_download_url }}"
+    dest: "{{ minecraft_server_dir }}/server.jar"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: "0644"
+  become: true
+
+- name: Accept Minecraft EULA
+  ansible.builtin.copy:
+    content: "eula=true\n"
+    dest: "{{ minecraft_server_dir }}/eula.txt"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: "0644"
+  become: true
+
+- name: Deploy minecraft systemd service
+  ansible.builtin.template:
+    src: minecraft.service.j2
+    dest: /etc/systemd/system/minecraft.service
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: reload systemd
+
+- name: Enable and start minecraft service
+  ansible.builtin.systemd:
+    name: minecraft
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true

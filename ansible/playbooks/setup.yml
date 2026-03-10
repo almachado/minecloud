@@ -1,0 +1,7 @@
+---
+- name: Setup Minecraft Server
+  hosts: minecloud
+  gather_facts: true
+
+  roles:
+    - minecraft
