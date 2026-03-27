@@ -1,5 +1,5 @@
-minecraft_version: "1.21.4"
-minecraft_download_url: "https://piston-data.mojang.com/v1/objects/64bb6d763bed0a9f1d632ec347938594144943ed/server.jar"
+minecraft_version: "26.1"
+minecraft_download_url: "https://piston-data.mojang.com/v1/objects/3872a7f07a1a595e651aef8b058dfc2bb3772f46/server.jar"
 minecraft_dir: "/opt/minecraft"
 minecraft_server_dir: "/opt/minecraft/server"
 minecraft_user: "minecraft"

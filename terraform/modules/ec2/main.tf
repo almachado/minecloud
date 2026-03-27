@@ -66,13 +66,13 @@ resource "aws_instance" "main" {
   iam_instance_profile   = aws_iam_instance_profile.ssm.name
   availability_zone      = var.availability_zone
 
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      instance_interruption_behavior = "stop"
-      spot_instance_type             = "persistent"
-    }
-  }
+  # instance_market_options {
+  #   market_type = "spot"
+  #   spot_options {
+  #     instance_interruption_behavior = "stop"
+  #     spot_instance_type             = "persistent"
+  #   }
+  # }
 
   root_block_device {
     volume_size           = 8

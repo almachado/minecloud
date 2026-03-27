@@ -4,9 +4,9 @@
     upgrade: dist
   become: true
 
-- name: Install Java 21
+- name: Install Java 25
   ansible.builtin.apt:
-    name: openjdk-21-jre-headless
+    name: openjdk-25-jre-headless
     state: present
   become: true
 
