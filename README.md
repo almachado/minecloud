@@ -17,7 +17,7 @@ MineCloud is a personal portfolio project that combines real-world use — playi
 | Cloud | AWS (us-east-1) |
 | IaC | Terraform |
 | Configuration Management | Ansible |
-| Compute | EC2 Spot Instance (t3.large) |
+| Compute | EC2 Instance (t3.large) |
 | Storage | EBS gp3 |
 | OS | Ubuntu Server 24.04 LTS |
 | Runtime | Java 25 + Minecraft Java Edition 26.1 |
@@ -181,7 +181,7 @@ minecloud/
 ├── terraform/
 │   ├── modules/
 │   │   ├── vpc/                 # VPC, subnet, IGW, route table
-│   │   ├── ec2/                 # EC2 Spot, IAM role, EBS, volume attachment
+│   │   ├── ec2/                 # EC2, IAM role, EBS, volume attachment
 │   │   └── security-group/      # Inbound/outbound rules
 │   └── environments/
 │       └── prod/                # Production environment configuration
