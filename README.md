@@ -1,52 +1,8 @@
-# MineCloud ☁️🎮
+# MineCloud
 
 > On-demand Minecraft Java Edition server on AWS, fully automated with Infrastructure as Code.
 
 MineCloud is a personal portfolio project that combines real-world use — playing Minecraft with my son — with production-grade cloud infrastructure practices. The server runs only when needed, keeping costs minimal while demonstrating end-to-end automation across the full DevOps stack.
-
----
-
-## Architecture
-
-```mermaid
-graph TD
-    Player["🎮 Player\n(Minecraft Client)"] -->|Port 25565| SG["🔒 Security Group\nminecloud-sg"]
-    Admin["👤 Admin"] -->|AWS SSM| SSM["🔑 SSM Session Manager\nNo SSH Required"]
-
-    SG --> EC2["⚡ EC2 Spot Instance\nt3.large · Ubuntu 24.04"]
-    SSM --> EC2
-
-    EC2 --> EBS_ROOT["💾 EBS gp3 · 8GB\nRoot Volume\n(OS + Binaries)"]
-    EC2 --> EBS_DATA["💾 EBS gp3 · 8GB\nData Volume\n/opt/minecraft/server\n(World Data)"]
-
-    EC2 --> JAVA["☕ Java 25\nOpenJDK"]
-    JAVA --> MC["⛏️ Minecraft Server\nJava Edition 26.1\nsystemd managed"]
-
-    subgraph VPC["🌐 VPC · 10.0.0.0/16"]
-        subgraph Subnet["📡 Public Subnet · 10.0.1.0/24 · us-east-1a"]
-            SG
-            EC2
-            EBS_ROOT
-            EBS_DATA
-        end
-    end
-
-    subgraph AWS_SERVICES["☁️ AWS Services"]
-        IGW["🌍 Internet Gateway"]
-        IAM["🔐 IAM Role\nAmazonSSMManagedInstanceCore"]
-        S3_STATE["🪣 S3\nTerraform State"]
-        DYNAMO["🗄️ DynamoDB\nState Locking"]
-    end
-
-    Subnet --> IGW
-    EC2 --> IAM
-    IAM --> SSM
-
-    subgraph IaC["🏗️ Infrastructure as Code"]
-        TF["Terraform\nmodules: vpc · ec2 · security-group\nbackend: S3 + DynamoDB"]
-        ANSIBLE["Ansible\nRole: minecraft\nConnection: AWS SSM"]
-    end
-```
 
 ---
 
@@ -72,7 +28,6 @@ graph TD
 |---|---|---|
 | Region | us-east-1 | 30-40% cheaper than sa-east-1. ~170ms latency is acceptable for home use |
 | Instance type | t3.large | 2 vCPU, 8GB RAM. Sufficient for 2 players with headroom |
-| Purchase model | Spot Persistent | Up to 70% cheaper than On-Demand. Persistent type allows stop/start |
 | Access method | SSM Session Manager | No open port 22, no key management, fully audited via CloudTrail |
 | Storage | Two EBS volumes | Root volume (OS/binaries) is disposable. Data volume (world) persists independently |
 | IaC | Terraform modules | Reusable, environment-agnostic infrastructure |
@@ -138,29 +93,28 @@ Edit `terraform.tfvars` and set your home IP:
 allowed_ip = "YOUR_IP/32"  # curl -s ifconfig.me
 ```
 
-### 3. Deploy the infrastructure
+### 3. Initialize Terraform
 
 ```bash
-cd terraform/environments/prod
-terraform init
-terraform apply
+make init
 ```
 
-### 4. Configure the Minecraft server
+### 4. Plan (optional)
 
 ```bash
-export MINECLOUD_INSTANCE_ID=$(cd terraform/environments/prod && terraform output -raw instance_id)
-cd ansible
-ansible-playbook -i inventories/prod/hosts.yml playbooks/setup.yml
+make plan
 ```
 
-### 5. Get the server IP and connect
+### 5. Apply infrastructure
 
 ```bash
-aws ec2 describe-instances \
-  --instance-ids $(cd terraform/environments/prod && terraform output -raw instance_id) \
-  --query "Reservations[0].Instances[0].PublicIpAddress" \
-  --output text
+make infra
+```
+
+### 5. Configure the server
+
+```bash
+make deploy
 ```
 
 Connect in Minecraft Java Edition: `<IP>:25565`
@@ -169,14 +123,17 @@ Connect in Minecraft Java Edition: `<IP>:25565`
 
 ## Daily Usage
 
-Once the infrastructure is deployed, use the scripts to start and stop the server:
+Once the infrastructure is deployed, use the commands bellow to start/stop the server and get the public IP:
 
 ```bash
 # Start the server
-./scripts/start.sh
+make start
 
 # Stop the server
-./scripts/stop.sh
+make stop
+
+# Get public IP
+make ip
 ```
 
 > ⚠️ The public IP changes every time the instance starts. This will be resolved with Route 53 in a future iteration.
@@ -188,13 +145,13 @@ Once the infrastructure is deployed, use the scripts to start and stop the serve
 Connect to the instance without SSH using AWS SSM:
 
 ```bash
-aws ssm start-session --target $(cd terraform/environments/prod && terraform output -raw instance_id)
+make ssm
 ```
 
-Check server logs:
+## Check server logs:
 
 ```bash
-sudo journalctl -u minecraft -f
+make logs
 ```
 
 ---
@@ -204,8 +161,7 @@ sudo journalctl -u minecraft -f
 To destroy all infrastructure:
 
 ```bash
-cd terraform/environments/prod
-terraform destroy
+make destroy
 ```
 
 > ⚠️ This will terminate the EC2 instance. The data EBS volume will be preserved if `delete_on_termination` is set to `false`.
@@ -220,7 +176,7 @@ minecloud/
 │   ├── modules/
 │   │   ├── vpc/                 # VPC, subnet, IGW, route table
 │   │   ├── ec2/                 # EC2 Spot, IAM role, EBS, volume attachment
-│   │   └── security-group/     # Inbound/outbound rules
+│   │   └── security-group/      # Inbound/outbound rules
 │   └── environments/
 │       └── prod/                # Production environment configuration
 ├── ansible/
@@ -232,23 +188,6 @@ minecloud/
 │   └── stop.sh                  # Stop the EC2 instance
 └── docs/                        # Additional documentation
 ```
-
----
-
-## Roadmap
-
-- [x] Manual infrastructure setup (learning phase)
-- [x] Custom VPC with public subnet
-- [x] EC2 Spot Persistent instance
-- [x] SSM Session Manager access (no SSH)
-- [x] Terraform modules (vpc, ec2, security-group)
-- [x] Ansible role for automated server configuration
-- [x] Start/stop scripts
-- [ ] Automated S3 backups for world data
-- [ ] Route 53 DNS with automatic IP update on start
-- [ ] GitHub Actions CI/CD pipeline
-- [ ] Discord bot for server management
-- [ ] Grafana + Prometheus monitoring
 
 ---
 
