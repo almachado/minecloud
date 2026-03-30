@@ -1,7 +1,5 @@
 # MineCloud
 
-# MineCloud ☁️🎮
-
 ![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
 ![Terraform](https://img.shields.io/badge/IaC-Terraform-purple)
 ![Ansible](https://img.shields.io/badge/Config-Ansible-red)
