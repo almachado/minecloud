@@ -1,5 +1,14 @@
 # MineCloud
 
+# MineCloud ☁️🎮
+
+![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
+![Terraform](https://img.shields.io/badge/IaC-Terraform-purple)
+![Ansible](https://img.shields.io/badge/Config-Ansible-red)
+
+> On-demand Minecraft Java Edition server on AWS, fully automated with Infrastructure as Code.
+
+
 > On-demand Minecraft Java Edition server on AWS, fully automated with Infrastructure as Code.
 
 MineCloud is a personal portfolio project that combines real-world use — playing Minecraft with my son — with production-grade cloud infrastructure practices. The server runs only when needed, keeping costs minimal while demonstrating end-to-end automation across the full DevOps stack.
@@ -123,7 +132,7 @@ Connect in Minecraft Java Edition: `<IP>:25565`
 
 ## Daily Usage
 
-Once the infrastructure is deployed, use the commands bellow to start/stop the server and get the public IP:
+Once the infrastructure is deployed, use the commands bellow to start and stop the server:
 
 ```bash
 # Start the server
@@ -131,14 +140,16 @@ make start
 
 # Stop the server
 make stop
-
-# Get public IP
-make ip
 ```
 
 > ⚠️ The public IP changes every time the instance starts. This will be resolved with Route 53 in a future iteration.
 
 ---
+
+## Get server public IP
+```bash
+make ip
+```
 
 ## Instance Access
 
