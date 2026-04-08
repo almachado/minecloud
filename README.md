@@ -1,41 +1,11 @@
 # MineCloud
 
-![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
+![AWS](https://img.shields.io/badge/AWS-us--east--1-orange)
 ![Terraform](https://img.shields.io/badge/IaC-Terraform-purple)
-![Ansible](https://img.shields.io/badge/Config-Ansible-red)
+![Ansible](https://img.shields.io/badge/Config-Ansible-green)
+![EC2](https://img.shields.io/badge/Compute-EC2_t3.large-blue)
 
-> On-demand Minecraft Java Edition server on AWS, fully automated with Infrastructure as Code.
-
-MineCloud is a personal portfolio project that combines real-world use — playing Minecraft with my son — with production-grade cloud infrastructure practices. The server runs only when needed, keeping costs minimal while demonstrating end-to-end automation across the full DevOps stack.
-
----
-
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Cloud | AWS (us-east-1) |
-| IaC | Terraform |
-| Configuration Management | Ansible |
-| Compute | EC2 Instance (t3.large) |
-| Storage | EBS gp3 |
-| OS | Ubuntu Server 24.04 LTS |
-| Runtime | Java 25 + Minecraft Java Edition 26.1 |
-| Access | AWS SSM Session Manager (no SSH) |
-| State Backend | S3 + DynamoDB |
-
----
-
-## Key Design Decisions
-
-| Decision | Choice | Rationale |
-|---|---|---|
-| Region | us-east-1 | 30-40% cheaper than sa-east-1. ~170ms latency is acceptable for home use |
-| Instance type | t3.large | 2 vCPU, 8GB RAM. Sufficient for 2 players with headroom |
-| Access method | SSM Session Manager | No open port 22, no key management, fully audited via CloudTrail |
-| Storage | Two EBS volumes | Root volume (OS/binaries) is disposable. Data volume (world) persists independently |
-| IaC | Terraform modules | Reusable, environment-agnostic infrastructure |
-| Config management | Ansible over SSM | Idempotent server setup without SSH dependency |
+On-demand Minecraft Java Edition server on AWS, automated with Infrastructure as Code.
 
 ---
 
@@ -49,23 +19,17 @@ MineCloud is a personal portfolio project that combines real-world use — playi
 
 ---
 
-## Bootstrap (First Time Only)
+## Bootstrap
 
-Before running Terraform, you need to create the remote state backend manually. This is a one-time step.
+One-time setup — creates the S3 + DynamoDB remote state backend.
 
-**1. Create the S3 bucket for Terraform state:**
 ```bash
-aws s3api create-bucket \
-  --bucket minecloud-tfstate \
-  --region us-east-1
+aws s3api create-bucket --bucket minecloud-tfstate --region us-east-1
 
 aws s3api put-bucket-versioning \
   --bucket minecloud-tfstate \
   --versioning-configuration Status=Enabled
-```
 
-**2. Create the DynamoDB table for state locking:**
-```bash
 aws dynamodb create-table \
   --table-name minecloud-tfstate-lock \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
@@ -78,47 +42,17 @@ aws dynamodb create-table \
 
 ## Getting Started
 
-### 1. Clone the repository
-
 ```bash
-git clone git@github.com:<your-username>/minecloud.git
-cd minecloud
-```
+# 1. Clone
+git clone git@github.com:<your-username>/minecloud.git && cd minecloud
 
-### 2. Configure variables
+# 2. Set your home IP
+cp terraform/environments/prod/terraform.tfvars.example \
+   terraform/environments/prod/terraform.tfvars
+# edit: allowed_ip = "YOUR_IP/32"
 
-```bash
-cp terraform/environments/prod/terraform.tfvars.example terraform/environments/prod/terraform.tfvars
-```
-
-Edit `terraform.tfvars` and set your home IP:
-
-```hcl
-allowed_ip = "YOUR_IP/32"  # curl -s ifconfig.me
-```
-
-### 3. Initialize Terraform
-
-```bash
-make init
-```
-
-### 4. Plan (optional)
-
-```bash
-make plan
-```
-
-### 5. Apply infrastructure
-
-```bash
-make infra
-```
-
-### 5. Configure the server
-
-```bash
-make deploy
+# 3. Deploy
+make init && make infra && make deploy
 ```
 
 Connect in Minecraft Java Edition: `<IP>:25565`
@@ -127,50 +61,16 @@ Connect in Minecraft Java Edition: `<IP>:25565`
 
 ## Daily Usage
 
-Once the infrastructure is deployed, use the commands bellow to start and stop the server:
+| Command | Action |
+|---|---|
+| `make start` | Start the EC2 instance |
+| `make stop` | Stop the EC2 instance |
+| `make ip` | Get current public IP |
+| `make ssm` | Open SSM session |
+| `make logs` | Tail server logs |
+| `make destroy` | Destroy all infrastructure |
 
-```bash
-# Start the server
-make start
-
-# Stop the server
-make stop
-```
-
-> ⚠️ The public IP changes every time the instance starts. This will be resolved with Route 53 in a future iteration.
-
----
-
-## Get server public IP
-```bash
-make ip
-```
-
-## Instance Access
-
-Connect to the instance without SSH using AWS SSM:
-
-```bash
-make ssm
-```
-
-## Check server logs:
-
-```bash
-make logs
-```
-
----
-
-## Teardown
-
-To destroy all infrastructure:
-
-```bash
-make destroy
-```
-
-> ⚠️ This will terminate the EC2 instance. The data EBS volume will be preserved if `delete_on_termination` is set to `false`.
+> The public IP changes on every start. Route 53 integration is planned.
 
 ---
 
@@ -197,8 +97,16 @@ minecloud/
 
 ---
 
-## Author
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Cloud | AWS (us-east-1) |
+| IaC | Terraform + S3/DynamoDB backend |
+| Config | Ansible over SSM (no SSH) |
+| Compute | EC2 t3.large · Ubuntu 24.04 |
+| Runtime | Java 25 · Minecraft 26.1 |
+
+---
 
 Built as a personal portfolio project combining real-world use with production-grade infrastructure practices.
-
-> Infrastructure as Code · DevOps · SRE · Cloud Infrastructure
