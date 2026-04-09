@@ -2,6 +2,7 @@ ENV ?= prod
 TF_DIR = terraform/environments/$(ENV)
 ANSIBLE_DIR = ansible
 INSTANCE_ID_CMD = cd $(TF_DIR) && terraform output -raw instance_id
+BUCKET_NAME_CMD = cd $(TF_DIR) && terraform output -raw backup_bucket_name
 
 init:
 	@cd $(TF_DIR) && terraform init
@@ -17,11 +18,13 @@ destroy:
 
 deploy:
 	@INSTANCE_ID=$$($(INSTANCE_ID_CMD)) && \
+	BUCKET_NAME=$$($(BUCKET_NAME_CMD)) && \
 	cd $(ANSIBLE_DIR) && \
+	MINECLOUD_INSTANCE_ID=$$INSTANCE_ID \
 	ansible-playbook \
 		-i inventories/$(ENV)/hosts.yml \
 		playbooks/setup.yml \
-		-e minecloud_instance_id=$$INSTANCE_ID
+		-e backup_bucket_name=$$BUCKET_NAME
 
 start:
 	@./scripts/start.sh

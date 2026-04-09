@@ -10,6 +10,22 @@
     state: present
   become: true
 
+- name: Install AWS CLI dependencies
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+  become: true
+
+- name: Install AWS CLI
+  ansible.builtin.shell: |
+    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+    unzip -q /tmp/awscliv2.zip -d /tmp
+    /tmp/aws/install
+    rm -rf /tmp/awscliv2.zip /tmp/aws
+  args:
+    creates: /usr/local/bin/aws
+  become: true
+
 - name: Create minecraft group
   ansible.builtin.group:
     name: "{{ minecraft_group }}"
@@ -84,4 +100,13 @@
     enabled: true
     state: started
     daemon_reload: true
+  become: true
+
+- name: Deploy backup script
+  ansible.builtin.template:
+    src: backup.sh.j2
+    dest: "{{ minecraft_dir }}/backup.sh"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: "0750"
   become: true

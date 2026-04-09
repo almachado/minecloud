@@ -29,3 +29,11 @@ module "ec2" {
   instance_type     = "t3.large"
   volume_size       = 8
 }
+
+module "s3_backup" {
+  source = "../../modules/s3-backup"
+  
+  project_name  = var.project_name
+  environment   = var.environment
+  iam_role_name = module.ec2.iam_role_name
+}

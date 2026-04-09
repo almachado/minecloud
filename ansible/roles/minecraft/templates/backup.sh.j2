@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
+WORLD_DIR="{{ minecraft_server_dir }}/world"
+BACKUP_BUCKET="{{ backup_bucket_name }}"
+TIMESTAMP=$(date +%Y-%m-%d)
+BACKUP_FILE="world-${TIMESTAMP}.tar.gz"
+MAX_BACKUPS=4
+
+echo "💾 Starting world backup..."
+
+if [ ! -d "$WORLD_DIR" ]; then
+  echo "❌ World directory not found: $WORLD_DIR"
+  exit 1
+fi
+
+echo "📦 Compressing world..."
+tar -czf "/tmp/${BACKUP_FILE}" -C "{{ minecraft_server_dir }}" world
+
+echo "☁️  Uploading to S3..."
+aws s3 cp "/tmp/${BACKUP_FILE}" "s3://${BACKUP_BUCKET}/${BACKUP_FILE}"
+
+rm -f "/tmp/${BACKUP_FILE}"
+
+echo "🧹 Removing old backups (keeping last ${MAX_BACKUPS})..."
+BACKUP_COUNT=$(aws s3 ls "s3://${BACKUP_BUCKET}/" | grep "world-" | wc -l)
+
+if [ "$BACKUP_COUNT" -gt "$MAX_BACKUPS" ]; then
+  DELETE_COUNT=$((BACKUP_COUNT - MAX_BACKUPS))
+  aws s3 ls "s3://${BACKUP_BUCKET}/" \
+    | grep "world-" \
+    | sort \
+    | head -n "$DELETE_COUNT" \
+    | awk '{print $4}' \
+    | xargs -I{} aws s3 rm "s3://${BACKUP_BUCKET}/{}"
+  echo "🗑️  Removed ${DELETE_COUNT} old backup(s)."
+fi
+
+echo "✅ Backup complete: ${BACKUP_FILE}"
