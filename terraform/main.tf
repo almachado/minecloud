@@ -1,5 +1,5 @@
 module "vpc" {
-  source = "../../modules/vpc"
+  source = "./modules/vpc"
 
   project_name       = var.project_name
   environment        = var.environment
@@ -9,7 +9,7 @@ module "vpc" {
 }
 
 module "security_group" {
-  source = "../../modules/security-group"
+  source = "./modules/security-group"
 
   project_name = var.project_name
   environment  = var.environment
@@ -18,7 +18,7 @@ module "security_group" {
 }
 
 module "ec2" {
-  source = "../../modules/ec2"
+  source = "./modules/ec2"
 
   project_name      = var.project_name
   environment       = var.environment
@@ -31,7 +31,7 @@ module "ec2" {
 }
 
 module "s3_backup" {
-  source = "../../modules/s3-backup"
+  source = "./modules/s3-backup"
   
   project_name  = var.project_name
   environment   = var.environment
