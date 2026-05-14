@@ -8,3 +8,7 @@ minecraft_data_device: "/dev/nvme1n1"
 java_xmx: "4G"
 java_xms: "2G"
 backup_bucket_name: ""
+minecraft_motd: "Deco e Joca em uma aventura inesperada!"
+minecraft_difficulty: "easy"
+minecraft_gamemode: "survival"
+minecraft_max_players: 5

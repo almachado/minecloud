@@ -84,6 +84,16 @@
     mode: "0644"
   become: true
 
+- name: Deploy server.properties
+  ansible.builtin.template:
+    src: server.properties.j2
+    dest: "{{ minecraft_server_dir }}/server.properties"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: "0644"
+  become: true
+  notify: restart minecraft
+
 - name: Deploy minecraft systemd service
   ansible.builtin.template:
     src: minecraft.service.j2
