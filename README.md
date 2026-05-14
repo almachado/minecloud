@@ -46,10 +46,9 @@ aws dynamodb create-table \
 # 1. Clone
 git clone git@github.com:<your-username>/minecloud.git && cd minecloud
 
-# 2. Set your home IP
-cp terraform/environments/prod/terraform.tfvars.example \
-   terraform/environments/prod/terraform.tfvars
-# edit: allowed_ip = "YOUR_IP/32"
+# 2. Configure variables
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+# No IP configuration needed — your current IP is detected automatically
 
 # 3. Deploy
 make init && make infra && make deploy
@@ -66,11 +65,11 @@ Connect in Minecraft Java Edition: `<IP>:25565`
 | `make start` | Start the EC2 instance |
 | `make stop` | Stop the EC2 instance |
 | `make ip` | Get current public IP |
-| `make ssm` | Open SSM session |
+| `make connect` | Open SSM session |
 | `make logs` | Tail server logs |
 | `make destroy` | Destroy all infrastructure |
 
-> The public IP changes on every start. Route 53 integration is planned.
+> The public IP changes on every start. Use `make ip` to get the current address after starting the server.
 
 ---
 
@@ -82,11 +81,15 @@ minecloud/
 │   ├── modules/
 │   │   ├── vpc/                 # VPC, subnet, IGW, route table
 │   │   ├── ec2/                 # EC2, IAM role, EBS, volume attachment
-│   │   └── security-group/      # Inbound/outbound rules
-│   └── environments/
-│       └── prod/                # Production environment configuration
+│   │   ├── security-group/      # Inbound/outbound rules
+│   │   └── s3-backup/           # S3 bucket for world backups
+│   ├── main.tf                  # Root module
+│   ├── variables.tf             # Input variables
+│   ├── outputs.tf               # Output values
+│   ├── backend.tf               # S3/DynamoDB remote state
+│   └── versions.tf              # Provider requirements
 ├── ansible/
-│   ├── inventories/prod/        # SSM-based inventory
+│   ├── inventories/        # SSM-based inventory
 │   ├── roles/minecraft/         # Server setup role
 │   └── playbooks/               # Entry point playbooks
 ├── scripts/
@@ -106,6 +109,7 @@ minecloud/
 | Config | Ansible over SSM (no SSH) |
 | Compute | EC2 t3.large · Ubuntu 24.04 |
 | Runtime | Java 25 · Minecraft 26.1 |
+| Backup | S3 (auto-upload on server stop) |
 
 ---
 
