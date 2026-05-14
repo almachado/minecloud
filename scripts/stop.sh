@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-TERRAFORM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../terraform/environments/prod" && pwd)"
+TERRAFORM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../terraform" && pwd)"
 
 echo "🛑 Stopping MineCloud server..."
 
