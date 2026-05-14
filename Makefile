@@ -1,20 +1,21 @@
-ENV ?= prod
-TF_DIR = terraform/environments/$(ENV)
+TF_DIR = terraform
 ANSIBLE_DIR = ansible
 INSTANCE_ID_CMD = cd $(TF_DIR) && terraform output -raw instance_id
 BUCKET_NAME_CMD = cd $(TF_DIR) && terraform output -raw backup_bucket_name
+MY_IP := $(shell curl -s https://checkip.amazonaws.com)/32
 
 init:
 	@cd $(TF_DIR) && terraform init
 
 plan:
-	@cd $(TF_DIR) && terraform plan
+	@cd $(TF_DIR) && terraform plan -var="allowed_ip=$(MY_IP)"
 
 infra:
-	@cd $(TF_DIR) && terraform apply
+	@cd $(TF_DIR) && terraform apply -var="allowed_ip=$(MY_IP)"
 
 destroy:
-	@cd $(TF_DIR) && terraform destroy
+	@cd $(TF_DIR) && terraform destroy -var="allowed_ip=$(MY_IP)"
+
 
 deploy:
 	@INSTANCE_ID=$$($(INSTANCE_ID_CMD)) && \
@@ -22,7 +23,7 @@ deploy:
 	cd $(ANSIBLE_DIR) && \
 	MINECLOUD_INSTANCE_ID=$$INSTANCE_ID \
 	ansible-playbook \
-		-i inventories/$(ENV)/hosts.yml \
+		-i inventories/hosts.yml \
 		playbooks/setup.yml \
 		-e backup_bucket_name=$$BUCKET_NAME
 
@@ -71,7 +72,4 @@ help:
 	@echo "  make ip          - Get public IP"
 	@echo "  make ssm         - Connect via SSM"
 	@echo "  make logs        - View Minecraft logs"
-	@echo ""
-	@echo "Optional:"
-	@echo "  ENV=dev|homolog|prod (default: prod)"
 	@echo ""
